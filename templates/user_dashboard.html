@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}User Dashboard - ResolveDesk{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Top Bar -->
+    <div class="dashboard-header">
+        <div>
+            <h2>User Grievance Dashboard</h2>
+            <p>Welcome back, <strong>{{ current_user_name }}</strong>. Track and manage your submitted complaints.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('new_complaint') }}" class="btn btn-primary">+ Lodge New Complaint</a>
+        </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="metrics-grid">
+        <a href="{{ url_for('user_dashboard') }}" class="metric-card {% if not status_filter %}metric-active{% endif %}">
+            <div class="metric-value">{{ total }}</div>
+            <div class="metric-title">Total Lodged</div>
+        </a>
+        <a href="{{ url_for('user_dashboard', status='Pending') }}" class="metric-card metric-warning {% if status_filter == 'Pending' %}metric-active{% endif %}">
+            <div class="metric-value">{{ pending }}</div>
+            <div class="metric-title">Pending Review</div>
+        </a>
+        <a href="{{ url_for('user_dashboard', status='In Progress') }}" class="metric-card metric-info {% if status_filter == 'In Progress' %}metric-active{% endif %}">
+            <div class="metric-value">{{ in_progress }}</div>
+            <div class="metric-title">In Progress</div>
+        </a>
+        <a href="{{ url_for('user_dashboard', status='Resolved') }}" class="metric-card metric-success {% if status_filter == 'Resolved' %}metric-active{% endif %}">
+            <div class="metric-value">{{ resolved }}</div>
+            <div class="metric-title">Resolved</div>
+        </a>
+    </div>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="filter-toolbar card">
+        <form action="{{ url_for('user_dashboard') }}" method="GET" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search by ID, keyword..." class="form-control form-control-sm">
+            </div>
+
+            <div class="filter-group">
+                <select name="status" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <select name="category" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    <option value="Infrastructure" {% if category_filter == 'Infrastructure' %}selected{% endif %}>Infrastructure</option>
+                    <option value="IT & Network" {% if category_filter == 'IT & Network' %}selected{% endif %}>IT & Network</option>
+                    <option value="Sanitation" {% if category_filter == 'Sanitation' %}selected{% endif %}>Sanitation</option>
+                    <option value="Hostel / Housing" {% if category_filter == 'Hostel / Housing' %}selected{% endif %}>Hostel / Housing</option>
+                    <option value="Academic" {% if category_filter == 'Academic' %}selected{% endif %}>Academic</option>
+                    <option value="Billing & Accounts" {% if category_filter == 'Billing & Accounts' %}selected{% endif %}>Billing & Accounts</option>
+                    <option value="Other" {% if category_filter == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+            {% if status_filter or category_filter or search_query %}
+                <a href="{{ url_for('user_dashboard') }}" class="btn btn-sm btn-outline">Reset</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Complaints Table -->
+    <div class="card table-card">
+        <div class="card-header">
+            <h3>My Complaints History</h3>
+        </div>
+
+        {% if complaints %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Tracking ID</th>
+                        <th>Subject / Title</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Lodged On</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('complaint_detail', tracking_id=c.tracking_id) }}" class="tracking-id-link">
+                                {{ c.tracking_id }}
+                            </a>
+                        </td>
+                        <td class="font-medium">
+                            {{ c.title }}
+                            {% if c.attachment %}
+                                <span title="Attachment included">📎</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="category-pill">{{ c.category }}</span></td>
+                        <td>
+                            <span class="badge badge-priority-{{ c.priority | lower }}">{{ c.priority }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-status-{{ c.status | lower | replace(' ', '-') }}">{{ c.status }}</span>
+                        </td>
+                        <td class="text-muted">{{ c.created_at[:10] }}</td>
+                        <td>
+                            <a href="{{ url_for('complaint_detail', tracking_id=c.tracking_id) }}" class="btn btn-xs btn-outline">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <h3>No complaints found</h3>
+            <p>You haven't lodged any complaints matching your criteria.</p>
+            <a href="{{ url_for('new_complaint') }}" class="btn btn-primary mt-3">+ Lodge Your First Complaint</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

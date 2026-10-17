@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}ResolveDesk - Online Complaint Management Portal{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-content">
+        <span class="hero-pill">⚡ Fast, Accountable & Transparent</span>
+        <h1 class="hero-title">Online Grievance & Complaint Redressal System</h1>
+        <p class="hero-subtitle">
+            Submit issues, monitor resolution progress in real time, and hold departments accountable with transparent activity logs and instant updates.
+        </p>
+
+        <div class="hero-actions">
+            {% if is_logged_in %}
+                <a href="{{ url_for('new_complaint') }}" class="btn btn-lg btn-primary">+ Lodge a Complaint</a>
+                <a href="{{ url_for('user_dashboard') }}" class="btn btn-lg btn-outline">My Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-lg btn-primary">Get Started (Register)</a>
+                <a href="{{ url_for('login') }}" class="btn btn-lg btn-outline">Sign In to Account</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Public Tracking Card -->
+    <div class="hero-tracker-card">
+        <h3>🔍 Quick Complaint Tracking</h3>
+        <p>Check the status of any filed grievance without logging in:</p>
+        <form action="{{ url_for('track') }}" method="GET" class="tracker-form">
+            <div class="tracker-input-group">
+                <input type="text" name="tracking_id" placeholder="e.g. CMP-2026-8812" required class="tracker-input">
+                <button type="submit" class="btn btn-primary">Track Status</button>
+            </div>
+        </form>
+        <div class="tracker-hint">
+            <span>Demo sample: <a href="{{ url_for('track', tracking_id='CMP-2026-8812') }}">CMP-2026-8812</a></span>
+        </div>
+    </div>
+</section>
+
+<!-- System Statistics Section -->
+<section class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-number">{{ total }}</div>
+            <div class="stat-label">Total Grievances Filed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-number">{{ pending }}</div>
+            <div class="stat-label">Under Investigation</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⚙️</div>
+            <div class="stat-number">{{ in_progress }}</div>
+            <div class="stat-label">In Active Resolution</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-number">{{ resolved }}</div>
+            <div class="stat-label">Successfully Resolved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-number">{{ resolution_rate }}%</div>
+            <div class="stat-label">Resolution Efficiency</div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="workflow-section">
+    <div class="section-header">
+        <span class="section-tag">Process Flow</span>
+        <h2>How ResolveDesk Works</h2>
+        <p>A step-by-step transparent pipeline from grievance submission to final resolution.</p>
+    </div>
+
+    <div class="workflow-grid">
+        <div class="workflow-step">
+            <div class="step-badge">1</div>
+            <div class="step-icon">📝</div>
+            <h3>Lodge Complaint</h3>
+            <p>Register or log in, choose the department category, add location and optional attachment photo.</p>
+        </div>
+        <div class="workflow-step">
+            <div class="step-badge">2</div>
+            <div class="step-icon">🏷️</div>
+            <h3>Get Unique Tracking ID</h3>
+            <p>Instantly receive an acknowledgment reference number (e.g. <code>CMP-2026-XXXX</code>).</p>
+        </div>
+        <div class="workflow-step">
+            <div class="step-badge">3</div>
+            <div class="step-icon">🛡️</div>
+            <h3>Department Review</h3>
+            <p>Designated administrators review severity, assign technicians, and log real-time status updates.</p>
+        </div>
+        <div class="workflow-step">
+            <div class="step-badge">4</div>
+            <div class="step-icon">⭐</div>
+            <h3>Resolution & Feedback</h3>
+            <p>Receive official closure remarks and provide satisfaction rating (1-5 stars) to ensure quality.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Common Complaint Categories -->
+<section class="categories-section">
+    <div class="section-header">
+        <span class="section-tag">Coverage</span>
+        <h2>Supported Categories</h2>
+        <p>ResolveDesk is configured to handle multiple institutional and municipal departments.</p>
+    </div>
+
+    <div class="categories-grid">
+        <div class="category-box">
+            <div class="cat-icon">🏢</div>
+            <h4>Infrastructure</h4>
+            <p>Classrooms, labs, damaged furniture, elevators, plumbing leaks.</p>
+        </div>
+        <div class="category-box">
+            <div class="cat-icon">🌐</div>
+            <h4>IT & Network</h4>
+            <p>Wi-Fi connectivity, server access, software licenses, lab PCs.</p>
+        </div>
+        <div class="category-box">
+            <div class="cat-icon">🧹</div>
+            <h4>Sanitation & Hygiene</h4>
+            <p>Waste management, restroom maintenance, campus cleaning.</p>
+        </div>
+        <div class="category-box">
+            <div class="cat-icon">🛏️</div>
+            <h4>Hostel & Housing</h4>
+            <p>Room maintenance, mess food quality, water dispenser issues.</p>
+        </div>
+        <div class="category-box">
+            <div class="cat-icon">📚</div>
+            <h4>Academic & Exams</h4>
+            <p>Timetable clashes, library resources, fee portals, course queries.</p>
+        </div>
+        <div class="category-box">
+            <div class="cat-icon">⚡</div>
+            <h4>Electrical & Power</h4>
+            <p>Power cuts, faulty switches, air conditioning, generator backups.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

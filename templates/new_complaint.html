@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Lodge New Complaint - ResolveDesk{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card form-card">
+        <div class="form-card-header">
+            <a href="{{ url_for('user_dashboard') }}" class="back-link">← Back to Dashboard</a>
+            <h2>Lodge a Grievance / Complaint</h2>
+            <p>Provide specific details regarding your issue to ensure rapid administrative action.</p>
+        </div>
+
+        <form action="{{ url_for('new_complaint') }}" method="POST" enctype="multipart/form-data" class="styled-form">
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="category" class="form-label">Department / Category *</label>
+                    <select id="category" name="category" class="form-control" required>
+                        <option value="" disabled selected>Select category...</option>
+                        <option value="Infrastructure">Infrastructure (Buildings, Classrooms, Restrooms, Furniture)</option>
+                        <option value="IT & Network">IT & Network (Wi-Fi, Lab PCs, Systems, Portals)</option>
+                        <option value="Sanitation">Sanitation & Hygiene (Cleaning, Waste, Water Supply)</option>
+                        <option value="Hostel / Housing">Hostel / Housing (Rooms, Mess Food, Wardens)</option>
+                        <option value="Academic">Academic & Exams (Timetables, Library, Records)</option>
+                        <option value="Billing & Accounts">Billing & Accounts (Fees, Receipts, Refunds)</option>
+                        <option value="Other">Other / General Grievance</option>
+                    </select>
+                </div>
+
+                <div class="form-group col-md-6">
+                    <label for="priority" class="form-label">Urgency / Priority *</label>
+                    <select id="priority" name="priority" class="form-control" required>
+                        <option value="Low">Low (General suggestion or minor inconvenience)</option>
+                        <option value="Medium" selected>Medium (Standard operational issue)</option>
+                        <option value="High">High (Impacting daily work/classes)</option>
+                        <option value="Urgent">Urgent (Emergency, safety or major outage)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="title" class="form-label">Complaint Title / Subject *</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="Brief summary of the issue (e.g., Projector in Room 204 not powering on)" required maxlength="120">
+            </div>
+
+            <div class="form-group">
+                <label for="location" class="form-label">Specific Location / Room / Department</label>
+                <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Block B, 2nd Floor, Room 204">
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">Detailed Description *</label>
+                <textarea id="description" name="description" rows="5" class="form-control" placeholder="Explain the problem in detail: when it started, how it impacts you, and any troubleshooting already attempted." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="attachment" class="form-label">Supporting Document or Photo (Optional)</label>
+                <input type="file" id="attachment" name="attachment" class="form-control-file" accept=".png,.jpg,.jpeg,.gif,.pdf,.txt,.docx">
+                <small class="form-text text-muted">Allowed types: PNG, JPG, JPEG, PDF, DOCX (Max: 8MB).</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">Submit Grievance</button>
+                <a href="{{ url_for('user_dashboard') }}" class="btn btn-outline btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Portal - ResolveDesk{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Admin Header -->
+    <div class="dashboard-header">
+        <div>
+            <h2>🛡️ Administrator Management Dashboard</h2>
+            <p>Master control panel: triage grievances, assign priority, and update resolution statuses.</p>
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('export_csv') }}" class="btn btn-outline">📥 Export Data (CSV)</a>
+        </div>
+    </div>
+
+    <!-- Admin KPI Cards -->
+    <div class="metrics-grid">
+        <a href="{{ url_for('admin_dashboard') }}" class="metric-card {% if not status_filter %}metric-active{% endif %}">
+            <div class="metric-value">{{ total }}</div>
+            <div class="metric-title">Total Lodged</div>
+        </a>
+        <a href="{{ url_for('admin_dashboard', status='Pending') }}" class="metric-card metric-warning {% if status_filter == 'Pending' %}metric-active{% endif %}">
+            <div class="metric-value">{{ pending }}</div>
+            <div class="metric-title">Pending Action</div>
+        </a>
+        <a href="{{ url_for('admin_dashboard', status='In Progress') }}" class="metric-card metric-info {% if status_filter == 'In Progress' %}metric-active{% endif %}">
+            <div class="metric-value">{{ in_progress }}</div>
+            <div class="metric-title">In Progress</div>
+        </a>
+        <a href="{{ url_for('admin_dashboard', status='Resolved') }}" class="metric-card metric-success {% if status_filter == 'Resolved' %}metric-active{% endif %}">
+            <div class="metric-value">{{ resolved }}</div>
+            <div class="metric-title">Resolved</div>
+        </a>
+        <a href="{{ url_for('admin_dashboard', status='Rejected') }}" class="metric-card metric-danger {% if status_filter == 'Rejected' %}metric-active{% endif %}">
+            <div class="metric-value">{{ rejected }}</div>
+            <div class="metric-title">Rejected / Closed</div>
+        </a>
+    </div>
+
+    <!-- Category Distribution Chips -->
+    <div class="category-chips-bar card">
+        <span class="chips-label">Department Volumes:</span>
+        <div class="chips-list">
+            {% for cat in category_counts %}
+                <span class="chip">
+                    {{ cat.category }}: <strong>{{ cat.count }}</strong>
+                </span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="filter-toolbar card">
+        <form action="{{ url_for('admin_dashboard') }}" method="GET" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search ID, title, complainant..." class="form-control form-control-sm">
+            </div>
+
+            <div class="filter-group">
+                <select name="status" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <select name="category" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    <option value="Infrastructure" {% if category_filter == 'Infrastructure' %}selected{% endif %}>Infrastructure</option>
+                    <option value="IT & Network" {% if category_filter == 'IT & Network' %}selected{% endif %}>IT & Network</option>
+                    <option value="Sanitation" {% if category_filter == 'Sanitation' %}selected{% endif %}>Sanitation</option>
+                    <option value="Hostel / Housing" {% if category_filter == 'Hostel / Housing' %}selected{% endif %}>Hostel / Housing</option>
+                    <option value="Academic" {% if category_filter == 'Academic' %}selected{% endif %}>Academic</option>
+                    <option value="Billing & Accounts" {% if category_filter == 'Billing & Accounts' %}selected{% endif %}>Billing & Accounts</option>
+                    <option value="Other" {% if category_filter == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <select name="priority" class="form-control form-control-sm" onchange="this.form.submit()">
+                    <option value="">All Priorities</option>
+                    <option value="Low" {% if priority_filter == 'Low' %}selected{% endif %}>Low</option>
+                    <option value="Medium" {% if priority_filter == 'Medium' %}selected{% endif %}>Medium</option>
+                    <option value="High" {% if priority_filter == 'High' %}selected{% endif %}>High</option>
+                    <option value="Urgent" {% if priority_filter == 'Urgent' %}selected{% endif %}>Urgent</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-sm btn-primary">Apply Filter</button>
+            {% if status_filter or category_filter or priority_filter or search_query %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm btn-outline">Reset</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Grievances Table -->
+    <div class="card table-card">
+        <div class="card-header">
+            <h3>All Registered Grievances ({{ complaints|length }})</h3>
+        </div>
+
+        {% if complaints %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Tracking ID</th>
+                        <th>Complainant</th>
+                        <th>Title / Subject</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Lodged</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('admin_manage_complaint', tracking_id=c.tracking_id) }}" class="tracking-id-link font-semibold">
+                                {{ c.tracking_id }}
+                            </a>
+                        </td>
+                        <td>
+                            <div>{{ c.user_name }}</div>
+                            <small class="text-muted">{{ c.user_email }}</small>
+                        </td>
+                        <td class="font-medium">
+                            {{ c.title }}
+                            {% if c.attachment %}
+                                <span title="Attachment included">📎</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="category-pill">{{ c.category }}</span></td>
+                        <td>
+                            <span class="badge badge-priority-{{ c.priority | lower }}">{{ c.priority }}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-status-{{ c.status | lower | replace(' ', '-') }}">{{ c.status }}</span>
+                        </td>
+                        <td class="text-muted">{{ c.created_at[:10] }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_manage_complaint', tracking_id=c.tracking_id) }}" class="btn btn-xs btn-primary">
+                                Manage
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>No complaints match your filters</h3>
+            <p>Try resetting the search filters to display all records.</p>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline mt-3">Reset Filters</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

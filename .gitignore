@@ -1,0 +1,31 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments & Secrets
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Database files
+*.db
+*.sqlite3
+complaints.db
+
+# User uploaded media
+static/uploads/*
+!static/uploads/.gitkeep
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Track Complaint Status - ResolveDesk{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header text-center">
+        <h2>🔍 Track Complaint Status</h2>
+        <p>Enter your assigned Tracking ID to inspect real-time progress and administrative notes.</p>
+    </div>
+
+    <!-- Search Box -->
+    <div class="search-card">
+        <form action="{{ url_for('track') }}" method="GET" class="tracker-form-inline">
+            <input type="text" name="tracking_id" value="{{ tracking_id }}" placeholder="e.g. CMP-2026-8812" required class="form-control">
+            <button type="submit" class="btn btn-primary">Check Status</button>
+        </form>
+    </div>
+
+    {% if complaint %}
+    <div class="card tracking-result-card">
+        <div class="card-header-flex">
+            <div>
+                <span class="text-muted">Tracking Reference:</span>
+                <h3 class="tracking-id-text">{{ complaint.tracking_id }}</h3>
+            </div>
+            <div class="badges-group">
+                <span class="badge badge-priority-{{ complaint.priority | lower }}">Priority: {{ complaint.priority }}</span>
+                <span class="badge badge-status-{{ complaint.status | lower | replace(' ', '-') }}">Status: {{ complaint.status }}</span>
+            </div>
+        </div>
+
+        <!-- Visual Stepper Progress Bar -->
+        <div class="stepper-wrapper">
+            <div class="stepper-item {% if complaint.status in ['Pending', 'In Progress', 'Resolved'] %}completed{% endif %}">
+                <div class="step-counter">1</div>
+                <div class="step-name">Submitted</div>
+            </div>
+            <div class="stepper-item {% if complaint.status in ['In Progress', 'Resolved'] %}completed{% elif complaint.status == 'Pending' %}active{% endif %}">
+                <div class="step-counter">2</div>
+                <div class="step-name">Under Review</div>
+            </div>
+            <div class="stepper-item {% if complaint.status == 'Resolved' %}completed{% elif complaint.status == 'In Progress' %}active{% endif %}">
+                <div class="step-counter">3</div>
+                <div class="step-name">In Progress</div>
+            </div>
+            <div class="stepper-item {% if complaint.status == 'Resolved' %}completed{% elif complaint.status == 'Rejected' %}rejected{% endif %}">
+                <div class="step-counter">4</div>
+                <div class="step-name">{% if complaint.status == 'Rejected' %}Rejected{% else %}Resolved{% endif %}</div>
+            </div>
+        </div>
+
+        <div class="complaint-info-grid">
+            <div class="info-item">
+                <span class="info-label">Title / Subject:</span>
+                <span class="info-value font-semibold">{{ complaint.title }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Category:</span>
+                <span class="info-value">{{ complaint.category }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Location / Department:</span>
+                <span class="info-value">{{ complaint.location or 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Lodged Date:</span>
+                <span class="info-value">{{ complaint.created_at }}</span>
+            </div>
+        </div>
+
+        <div class="complaint-description-box">
+            <h4>Description:</h4>
+            <p>{{ complaint.description }}</p>
+        </div>
+
+        {% if complaint.admin_remark %}
+        <div class="admin-remark-box">
+            <h4>💬 Official Resolution Remark:</h4>
+            <p>{{ complaint.admin_remark }}</p>
+        </div>
+        {% endif %}
+
+        {% if logs %}
+        <div class="timeline-section">
+            <h4>Audit History & Updates</h4>
+            <div class="timeline-list">
+                {% for log in logs %}
+                <div class="timeline-entry">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <strong class="timeline-status">{{ log.status }}</strong>
+                            <span class="timeline-date">{{ log.created_at }}</span>
+                        </div>
+                        <p class="timeline-remark">{{ log.remark or 'Status updated.' }}</p>
+                        <small class="text-muted">Updated by: {{ log.action_by }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card-footer-flex">
+            <a href="javascript:window.print()" class="btn btn-outline">🖨️ Print Acknowledgment</a>
+            {% if not is_logged_in %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary">Login to Manage Your Complaints</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

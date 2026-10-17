@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Complaint: {{ complaint.tracking_id }} - ResolveDesk Admin{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="card-header-flex mb-3">
+        <a href="{{ url_for('admin_dashboard') }}" class="back-link">← Back to Admin Dashboard</a>
+        <div class="badges-group">
+            <span class="badge badge-priority-{{ complaint.priority | lower }}">Priority: {{ complaint.priority }}</span>
+            <span class="badge badge-status-{{ complaint.status | lower | replace(' ', '-') }}">Status: {{ complaint.status }}</span>
+        </div>
+    </div>
+
+    <div class="admin-grid-2col">
+        <!-- Left Column: Complaint Details & Timeline -->
+        <div class="card">
+            <div class="card-header">
+                <span class="text-muted text-sm">Grievance Reference</span>
+                <h2 class="tracking-id-text">{{ complaint.tracking_id }}</h2>
+            </div>
+
+            <div class="complaint-info-grid">
+                <div class="info-item">
+                    <span class="info-label">Title / Subject:</span>
+                    <span class="info-value font-semibold">{{ complaint.title }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Department:</span>
+                    <span class="info-value">{{ complaint.category }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Complainant:</span>
+                    <span class="info-value">{{ complaint.user_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value"><a href="mailto:{{ complaint.user_email }}">{{ complaint.user_email }}</a></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value">{{ complaint.user_phone or 'Not provided' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">{{ complaint.location or 'Not specified' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Submitted On:</span>
+                    <span class="info-value">{{ complaint.created_at }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Last Updated:</span>
+                    <span class="info-value">{{ complaint.updated_at }}</span>
+                </div>
+            </div>
+
+            <div class="complaint-description-box">
+                <h4>Description:</h4>
+                <p>{{ complaint.description }}</p>
+            </div>
+
+            {% if complaint.attachment %}
+            <div class="attachment-box">
+                <h4>📎 Supporting Attachment</h4>
+                <p>File: <strong>{{ complaint.attachment }}</strong></p>
+                <a href="{{ url_for('uploaded_file', filename=complaint.attachment) }}" target="_blank" class="btn btn-sm btn-outline">
+                    View Attachment
+                </a>
+            </div>
+            {% endif %}
+
+            {% if complaint.feedback_rating %}
+            <div class="submitted-feedback mt-4">
+                <h4>⭐ User Satisfaction Rating:</h4>
+                <div class="star-rating-display">
+                    {% for i in range(1, 6) %}
+                        <span class="star {% if i <= complaint.feedback_rating %}filled{% endif %}">★</span>
+                    {% endfor %}
+                    <span class="rating-number">({{ complaint.feedback_rating }}/5)</span>
+                </div>
+                {% if complaint.feedback_comment %}
+                    <p class="feedback-comment"><em>"{{ complaint.feedback_comment }}"</em></p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Audit Logs -->
+            {% if logs %}
+            <div class="timeline-section mt-4">
+                <h4>Audit History Trail</h4>
+                <div class="timeline-list">
+                    {% for log in logs %}
+                    <div class="timeline-entry">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <strong class="timeline-status">{{ log.status }}</strong>
+                                <span class="timeline-date">{{ log.created_at }}</span>
+                            </div>
+                            <p class="timeline-remark">{{ log.remark or 'No extra remark' }}</p>
+                            <small class="text-muted">By: {{ log.action_by }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Administrative Action Panel -->
+        <div class="card action-panel-card">
+            <div class="card-header">
+                <h3>⚙️ Administrative Action Panel</h3>
+                <p>Update triage status and record formal remarks for the complainant.</p>
+            </div>
+
+            <form action="{{ url_for('admin_manage_complaint', tracking_id=complaint.tracking_id) }}" method="POST" class="styled-form">
+                <div class="form-group">
+                    <label for="status" class="form-label">Update Grievance Status *</label>
+                    <select id="status" name="status" class="form-control" required>
+                        <option value="Pending" {% if complaint.status == 'Pending' %}selected{% endif %}>Pending (Under initial review)</option>
+                        <option value="In Progress" {% if complaint.status == 'In Progress' %}selected{% endif %}>In Progress (Assigned / Work ongoing)</option>
+                        <option value="Resolved" {% if complaint.status == 'Resolved' %}selected{% endif %}>Resolved (Issue rectified successfully)</option>
+                        <option value="Rejected" {% if complaint.status == 'Rejected' %}selected{% endif %}>Rejected / Invalid (Cannot be processed)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority" class="form-label">Adjust Urgency / Priority *</label>
+                    <select id="priority" name="priority" class="form-control" required>
+                        <option value="Low" {% if complaint.priority == 'Low' %}selected{% endif %}>Low</option>
+                        <option value="Medium" {% if complaint.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                        <option value="High" {% if complaint.priority == 'High' %}selected{% endif %}>High</option>
+                        <option value="Urgent" {% if complaint.priority == 'Urgent' %}selected{% endif %}>Urgent</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="admin_remark" class="form-label">Official Remark / Resolution Note</label>
+                    <textarea id="admin_remark" name="admin_remark" rows="4" class="form-control" placeholder="Provide explanation or steps taken (e.g. Technician John assigned, replaced fuse, fixed on 17-Oct)">{{ complaint.admin_remark or '' }}</textarea>
+                    <small class="form-text text-muted">This note will be visible to the user and in public tracking.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Save & Update Grievance</button>
+            </form>
+
+            <div class="quick-notice-box mt-4">
+                <h4>📌 Important Notice:</h4>
+                <p>Updating the status automatically updates the progress stepper on the user's dashboard and creates a permanent entry in the audit timeline.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

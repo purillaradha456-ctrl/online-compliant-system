@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Complaint Details: {{ complaint.tracking_id }} - ResolveDesk{% endblock %}
+
+{% block content %}
+<div class="page-container printable-receipt">
+    <!-- Top Action Header -->
+    <div class="card-header-flex mb-3 no-print">
+        <a href="{{ url_for('user_dashboard') if current_user_role == 'user' else url_for('admin_dashboard') }}" class="back-link">
+            ← Back to {% if current_user_role == 'admin' %}Admin Dashboard{% else %}My Dashboard{% endif %}
+        </a>
+        <div class="btn-group">
+            <button onclick="window.print()" class="btn btn-outline">🖨️ Print Receipt / Slip</button>
+            {% if current_user_role == 'admin' %}
+                <a href="{{ url_for('admin_manage_complaint', tracking_id=complaint.tracking_id) }}" class="btn btn-primary">
+                    Manage / Update Status
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Official Receipt Banner (visible when printing) -->
+    <div class="print-header print-only">
+        <h2>ResolveDesk Grievance Acknowledgement Slip</h2>
+        <p>Reference: {{ complaint.tracking_id }} | Printed: {{ complaint.created_at[:10] }}</p>
+        <hr>
+    </div>
+
+    <!-- Main Detail Card -->
+    <div class="card detail-card">
+        <div class="card-header-flex">
+            <div>
+                <span class="text-muted text-sm">Official Tracking Reference</span>
+                <h2 class="tracking-id-text">{{ complaint.tracking_id }}</h2>
+            </div>
+            <div class="badges-group">
+                <span class="badge badge-priority-{{ complaint.priority | lower }}">Priority: {{ complaint.priority }}</span>
+                <span class="badge badge-status-{{ complaint.status | lower | replace(' ', '-') }}">Status: {{ complaint.status }}</span>
+            </div>
+        </div>
+
+        <!-- Stepper Progress Tracker -->
+        <div class="stepper-wrapper">
+            <div class="stepper-item {% if complaint.status in ['Pending', 'In Progress', 'Resolved'] %}completed{% endif %}">
+                <div class="step-counter">1</div>
+                <div class="step-name">Submitted</div>
+            </div>
+            <div class="stepper-item {% if complaint.status in ['In Progress', 'Resolved'] %}completed{% elif complaint.status == 'Pending' %}active{% endif %}">
+                <div class="step-counter">2</div>
+                <div class="step-name">Under Review</div>
+            </div>
+            <div class="stepper-item {% if complaint.status == 'Resolved' %}completed{% elif complaint.status == 'In Progress' %}active{% endif %}">
+                <div class="step-counter">3</div>
+                <div class="step-name">In Progress</div>
+            </div>
+            <div class="stepper-item {% if complaint.status == 'Resolved' %}completed{% elif complaint.status == 'Rejected' %}rejected{% endif %}">
+                <div class="step-counter">4</div>
+                <div class="step-name">{% if complaint.status == 'Rejected' %}Rejected{% else %}Resolved{% endif %}</div>
+            </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="complaint-info-grid">
+            <div class="info-item">
+                <span class="info-label">Title / Subject:</span>
+                <span class="info-value font-semibold">{{ complaint.title }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Category / Department:</span>
+                <span class="info-value">{{ complaint.category }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Complainant:</span>
+                <span class="info-value">{{ complaint.user_name }} ({{ complaint.user_email }})</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Contact Phone:</span>
+                <span class="info-value">{{ complaint.user_phone or 'Not provided' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Location / Room:</span>
+                <span class="info-value">{{ complaint.location or 'Not specified' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date Submitted:</span>
+                <span class="info-value">{{ complaint.created_at }}</span>
+            </div>
+        </div>
+
+        <!-- Description Box -->
+        <div class="complaint-description-box">
+            <h4>Description of Issue</h4>
+            <p>{{ complaint.description }}</p>
+        </div>
+
+        <!-- Supporting Attachment (if any) -->
+        {% if complaint.attachment %}
+        <div class="attachment-box">
+            <h4>📎 Supporting Attachment</h4>
+            <p>Uploaded file: <strong>{{ complaint.attachment }}</strong></p>
+            <div class="attachment-actions">
+                <a href="{{ url_for('uploaded_file', filename=complaint.attachment) }}" target="_blank" class="btn btn-sm btn-outline">
+                    View / Download Attachment
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Official Administrator Remark -->
+        {% if complaint.admin_remark %}
+        <div class="admin-remark-box">
+            <h4>🛡️ Official Administration Resolution Remark</h4>
+            <p>{{ complaint.admin_remark }}</p>
+            <small class="text-muted">Updated on: {{ complaint.updated_at }}</small>
+        </div>
+        {% endif %}
+
+        <!-- Activity Audit Timeline -->
+        {% if logs %}
+        <div class="timeline-section">
+            <h4>Activity & Status Progression Log</h4>
+            <div class="timeline-list">
+                {% for log in logs %}
+                <div class="timeline-entry">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <strong class="timeline-status">{{ log.status }}</strong>
+                            <span class="timeline-date">{{ log.created_at }}</span>
+                        </div>
+                        <p class="timeline-remark">{{ log.remark or 'Status changed.' }}</p>
+                        <small class="text-muted">Handled by: <strong>{{ log.action_by }}</strong></small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- User Feedback Section -->
+        {% if complaint.status == 'Resolved' %}
+        <div class="feedback-section card mt-4 no-print">
+            <div class="card-header">
+                <h3>⭐ Resolution Feedback & Satisfaction Rating</h3>
+            </div>
+
+            {% if complaint.feedback_rating %}
+                <div class="submitted-feedback">
+                    <p class="text-success font-semibold">Feedback successfully submitted for this grievance:</p>
+                    <div class="star-rating-display">
+                        {% for i in range(1, 6) %}
+                            <span class="star {% if i <= complaint.feedback_rating %}filled{% endif %}">★</span>
+                        {% endfor %}
+                        <span class="rating-number">({{ complaint.feedback_rating }}/5 stars)</span>
+                    </div>
+                    {% if complaint.feedback_comment %}
+                        <p class="feedback-comment"><em>"{{ complaint.feedback_comment }}"</em></p>
+                    {% endif %}
+                </div>
+            {% elif current_user_role == 'user' %}
+                <form action="{{ url_for('submit_feedback', tracking_id=complaint.tracking_id) }}" method="POST" class="feedback-form">
+                    <p>Are you satisfied with how this grievance was handled? Please rate our service:</p>
+
+                    <div class="star-rating-select">
+                        <label><input type="radio" name="rating" value="5" required> 5 ★ (Excellent)</label>
+                        <label><input type="radio" name="rating" value="4"> 4 ★ (Good)</label>
+                        <label><input type="radio" name="rating" value="3"> 3 ★ (Average)</label>
+                        <label><input type="radio" name="rating" value="2"> 2 ★ (Poor)</label>
+                        <label><input type="radio" name="rating" value="1"> 1 ★ (Very Dissatisfied)</label>
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <label for="comment" class="form-label">Optional Comments / Remarks:</label>
+                        <textarea name="comment" id="comment" rows="2" class="form-control" placeholder="Tell us what went well or what could be improved..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-2">Submit Feedback</button>
+                </form>
+            {% else %}
+                <p class="text-muted">Awaiting complainant feedback.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
