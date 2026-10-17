@@ -5,6 +5,7 @@ import csv
 import io
 from datetime import datetime
 from functools import wraps
+from database import get_db, init_db
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
@@ -21,6 +22,7 @@ from database import get_db, init_db
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "online-complaint-management-secret-key-2026")
+init_db()
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf", "txt", "docx"}
@@ -533,4 +535,4 @@ def uploaded_file(filename):
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True, host="127.0.0.1", port=5000)
+     app.run(debug=False, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
